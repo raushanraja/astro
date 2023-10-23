@@ -51,6 +51,13 @@ export const markdownConfigDefaults: Omit<Required<AstroMarkdownOptions>, 'draft
 // Skip nonessential plugins during performance benchmark runs
 const isPerformanceBenchmark = Boolean(process.env.ASTRO_PERFORMANCE_BENCHMARK);
 
+const regex = /\/(\[\^[0-9]+\])/g;
+function editVfile(vfile: VFile) {
+	if (typeof vfile.value === 'string') {
+		vfile.value = vfile.value.replace(regex, "$1");
+	}
+}
+
 /**
  * Create a markdown preprocessor to render multiple markdown files
  */
@@ -125,6 +132,7 @@ export async function createMarkdownProcessor(
 	return {
 		async render(content, renderOpts) {
 			const vfile = new VFile({ value: content, path: renderOpts?.fileURL });
+			editVfile(vfile);
 			setVfileFrontmatter(vfile, renderOpts?.frontmatter ?? {});
 
 			const result: MarkdownVFile = await parser.process(vfile).catch((err) => {
